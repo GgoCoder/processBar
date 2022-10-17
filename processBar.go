@@ -1,4 +1,4 @@
-package main
+package processbar
 
 import (
 	"fmt"
@@ -17,16 +17,10 @@ type Bar struct{
 	Stop      chan struct{}
 }
 
-
-func (b *Bar)disPlay(){
-	fmt.Printf("\r<%-50s>%8s%d%%%8d/%d", b.Output, "",b.Percent, b.Bar, b.Total)
-	b.Output = ""
-}
-
-func (b *Bar)finsh(){
-	close (b.Stop)
-	fmt.Println()
-	fmt.Printf("everything completed!\n")
+func (b *Bar)Run(){
+	go b.input()
+	b.timer()
+	b.finsh()
 }
 
 func NewBar(total int, timer time.Duration, Tag string)*Bar{
@@ -47,6 +41,17 @@ func NewBar(total int, timer time.Duration, Tag string)*Bar{
 		Stop: make(chan struct{}),
 	}
 	return bar
+}
+
+func (b *Bar)disPlay(){
+	fmt.Printf("\r<%-50s>%8s%d%%%8d/%d", b.Output, "",b.Percent, b.Bar, b.Total)
+	b.Output = ""
+}
+
+func (b *Bar)finsh(){
+	close (b.Stop)
+	fmt.Println()
+	fmt.Printf("everything completed!\n")
 }
 
 func (b *Bar)timer(){
@@ -82,20 +87,3 @@ func (b *Bar)input(){
 }
 }
 
-func (b *Bar)Run(){
-	go b.input()
-	b.timer()
-	b.finsh()
-}
-
-func main(){
-
-	bar := NewBar(100, time.Microsecond * 200, "#")
-	go bar.Run()
-	for i := 0; i < 100; i++{
-		time.Sleep(100 * time.Millisecond)
-		bar.Done <- i
-	}
-	time.Sleep(time.Second * 1)
-	fmt.Printf("every thing ready!\n")
-}
